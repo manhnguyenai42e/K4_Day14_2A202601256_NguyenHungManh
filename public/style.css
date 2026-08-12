@@ -878,6 +878,19 @@ body {
   padding-right: 6px;
 }
 
+.dataset-card {
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dataset-card:hover,
+.dataset-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--indigo);
+  box-shadow: var(--shadow-md);
+  outline: none;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;

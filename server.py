@@ -166,7 +166,12 @@ class OrbitEvalHandler(SimpleHTTPRequestHandler):
             "engine_mode": "OpenAI Real API (Live)" if has_key else "Offline Heuristic",
             "corpus": "OrbitTech Store Support Docs (10 documents)",
             "qa_pairs_count": 20,
-            "quality_gate_threshold": 0.60
+            "quality_gate_threshold": 0.60,
+            "retrieval_top_k": 5,
+            "metric_engine": "RAGAS-inspired deterministic word-overlap heuristic",
+            "benchmark_artifact": "artifacts/benchmark_results.json",
+            "actual_answers_artifact": "artifacts/actual_answers.json",
+            "benchmark_command": "python domain_assistant.py && python evaluate_answers.py"
         }
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -234,7 +239,7 @@ class OrbitEvalHandler(SimpleHTTPRequestHandler):
                     "source_docs": list(set(c.source_doc for c in retrieved_chunks)),
                     "faithfulness": round(faithfulness, 4),
                     "relevance": round(relevance, 4),
-                    "completeness": round(completeness, 4),
+                    "completeness": completeness,
                     "context_recall": context_recall,
                     "context_precision": context_precision,
                     "overall": round(overall, 4),

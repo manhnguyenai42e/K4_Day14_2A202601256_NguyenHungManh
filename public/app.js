@@ -5,6 +5,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Application State
   let benchmarkData = null;
+  let systemStatus = {};
   let currentFilter = "all";
   let mainChart = null;
   let donutChart = null;
@@ -17,6 +18,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const benchmarkTableBody = document.getElementById("benchmark-table-body");
   const globalSearchInput = document.getElementById("global-search-input");
   const tableSearchInput = document.getElementById("table-search-input");
+  const chartMetricSelect = document.getElementById("chart-metric-select");
+  const selectAllCheckbox = document.getElementById("select-all-checkbox");
+  const btnAddQa = document.getElementById("btn-add-qa");
   const feedEventList = document.getElementById("feed-event-list");
   const btnReEval = document.getElementById("btn-re-eval");
   const themeToggleBtn = document.getElementById("theme-toggle-btn");
@@ -87,6 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const statusRes = await fetch("/api/system-status");
       if (statusRes.ok) {
         const sysData = await statusRes.json();
+        systemStatus = sysData;
         const engineText = document.getElementById("engine-status-text");
         if (engineText) {
           engineText.textContent = sysData.has_openai_key ? `OpenAI Live API (${sysData.openai_model})` : "Offline Heuristic Engine";
@@ -118,6 +123,9 @@ document.addEventListener("DOMContentLoaded", () => {
     renderLiveFeed();
     renderGoldenDatasetGrid();
     renderFailureAnalysis();
+    renderRagasMetrics();
+    renderQualityGate();
+    renderSettings();
   }
 
   // Render KPIs
@@ -213,14 +221,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const ctxBar = document.getElementById("main-metrics-chart")?.getContext("2d");
     if (ctxBar) {
       if (mainChart) mainChart.destroy();
+      const chartDatasets = [
+        { key: "faithfulness", label: "Độ Trung Thực %", data: faithfulnessData, backgroundColor: "#6366f1", borderRadius: 4 },
+        { key: "relevance", label: "Độ Liên Quan %", data: relevanceData, backgroundColor: "#3b82f6", borderRadius: 4 },
+        { key: "completeness", label: "Độ Hoàn Thiện %", data: completenessData, backgroundColor: "#10b981", borderRadius: 4 }
+      ];
+      const selectedMetric = chartMetricSelect?.value || "all";
+      const visibleDatasets = selectedMetric === "all"
+        ? chartDatasets
+        : chartDatasets.filter(dataset => dataset.key === selectedMetric);
       mainChart = new Chart(ctxBar, {
         type: "bar",
         data: {
           labels: labels,
           datasets: [
-            { label: "Độ Trung Thực %", data: faithfulnessData, backgroundColor: "#6366f1", borderRadius: 4 },
-            { label: "Độ Liên Quan %", data: relevanceData, backgroundColor: "#3b82f6", borderRadius: 4 },
-            { label: "Độ Hoàn Thiện %", data: completenessData, backgroundColor: "#10b981", borderRadius: 4 }
+            ...visibleDatasets
           ]
         },
         options: {
@@ -371,7 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const results = benchmarkData.results || [];
 
     container.innerHTML = results.map(r => `
-      <div class="panel-card">
+      <div class="panel-card dataset-card" data-id="${escapeHtml(r.id)}" role="button" tabindex="0" title="Mở chi tiết ${escapeHtml(r.id)}">
         <div class="flex-align" style="justify-content:space-between; margin-bottom:8px;">
           <span class="qa-id-code">${r.id}</span>
           <span class="badge-tag tag-${r.difficulty}">${diffMap[r.difficulty] || r.difficulty}</span>
@@ -380,6 +395,97 @@ document.addEventListener("DOMContentLoaded", () => {
         <p style="font-size:12px; color:var(--text-secondary); line-height:1.4;">${truncate(r.expected_answer || r.actual_answer, 90)}</p>
       </div>
     `).join("");
+
+    container.querySelectorAll(".dataset-card").forEach(card => {
+      const open = () => openQADetailModal(card.getAttribute("data-id"));
+      card.addEventListener("click", open);
+      card.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          open();
+        }
+      });
+    });
+  }
+
+  function renderRagasMetrics() {
+    const cards = document.getElementById("ragas-metric-cards");
+    const body = document.getElementById("ragas-definition-body");
+    if (!cards || !body) return;
+
+    const summary = benchmarkData.summary || {};
+    const results = benchmarkData.results || [];
+    const averageOverall = results.length
+      ? results.reduce((sum, item) => sum + (item.overall || 0), 0) / results.length
+      : 0;
+    const metrics = [
+      ["Faithfulness", summary.avg_faithfulness, "Answer tokens ∩ retrieved/gold context ÷ answer tokens"],
+      ["Relevance", summary.avg_relevance, "Answer tokens ∩ question tokens ÷ question tokens"],
+      ["Completeness", summary.avg_completeness, "Answer tokens ∩ expected answer tokens ÷ expected tokens"],
+      ["Context Recall", summary.avg_context_recall, "Expected tokens covered by union of retrieved chunks"],
+      ["Context Precision", summary.avg_context_precision, "Rank-aware Average Precision@K"],
+      ["Overall", averageOverall, "Mean of Faithfulness, Relevance and Completeness"],
+    ];
+    const format = value => Number.isFinite(value) ? `${(value * 100).toFixed(1)}%` : "N/A";
+
+    cards.innerHTML = metrics.map(([name, value]) => `
+      <div class="kpi-card">
+        <div class="kpi-header"><span class="kpi-label">${name}</span><i class="fa-solid fa-chart-line kpi-icon"></i></div>
+        <div class="kpi-body"><div class="kpi-value-row"><span class="kpi-value">${format(value)}</span></div></div>
+      </div>
+    `).join("");
+
+    body.innerHTML = metrics.map(([name, value, definition]) => `
+      <tr><td><strong>${name}</strong></td><td>${definition}</td><td>RAGAS-inspired heuristic</td><td>${format(value)}</td></tr>
+    `).join("");
+  }
+
+  function renderQualityGate() {
+    const cards = document.getElementById("gate-status-cards");
+    const body = document.getElementById("gate-check-body");
+    if (!cards || !body) return;
+
+    const summary = benchmarkData.summary || {};
+    const threshold = Number.isFinite(systemStatus.quality_gate_threshold) ? systemStatus.quality_gate_threshold : 0.60;
+    const passRate = Number.isFinite(summary.pass_rate) ? summary.pass_rate : 0;
+    const total = Number.isFinite(summary.total) ? summary.total : (benchmarkData.results || []).length;
+    const passed = Number.isFinite(summary.passed) ? summary.passed : 0;
+    const gatePassed = passRate >= threshold;
+    const resultTag = value => `<span class="badge-tag ${value ? "tag-pass" : "tag-fail"}">${value ? "ĐẠT" : "KHÔNG ĐẠT"}</span>`;
+
+    cards.innerHTML = `
+      <div class="kpi-card"><div class="kpi-header"><span class="kpi-label">Quyết Định Deploy</span><i class="fa-solid fa-shield-halved kpi-icon"></i></div><div class="kpi-body"><div class="kpi-value-row"><span class="kpi-value">${gatePassed ? "PASS" : "BLOCK"}</span></div></div></div>
+      <div class="kpi-card"><div class="kpi-header"><span class="kpi-label">Pass Rate</span><i class="fa-solid fa-percent kpi-icon"></i></div><div class="kpi-body"><div class="kpi-value-row"><span class="kpi-value">${(passRate * 100).toFixed(0)}%</span></div></div></div>
+      <div class="kpi-card"><div class="kpi-header"><span class="kpi-label">Cases Đạt</span><i class="fa-solid fa-check-double kpi-icon"></i></div><div class="kpi-body"><div class="kpi-value-row"><span class="kpi-value">${passed}/${total}</span></div></div></div>
+    `;
+
+    const checks = [
+      ["Pass rate benchmark", passRate.toFixed(2), `≥ ${threshold.toFixed(2)}`, gatePassed],
+      ["Golden QA coverage", `${total}/20`, "= 20", total === 20],
+      ["Evaluation artifact", benchmarkData.results?.length ? "Loaded" : "Missing", "Loaded", Boolean(benchmarkData.results?.length)],
+      ["OpenAI runtime", systemStatus.has_openai_key ? "Configured" : "Offline", "Configured", Boolean(systemStatus.has_openai_key)],
+    ];
+    body.innerHTML = checks.map(([name, value, limit, passedCheck]) => `<tr><td>${name}</td><td>${value}</td><td>${limit}</td><td>${resultTag(passedCheck)}</td></tr>`).join("");
+  }
+
+  function renderSettings() {
+    const grid = document.getElementById("settings-grid");
+    const command = document.getElementById("settings-command");
+    if (!grid || !command) return;
+    const settings = [
+      ["Engine", systemStatus.engine_mode || "Unknown"],
+      ["Model", systemStatus.openai_model || "None"],
+      ["Corpus", systemStatus.corpus || "Unknown"],
+      ["Golden QA", String(systemStatus.qa_pairs_count ?? "N/A")],
+      ["Retriever top-k", String(systemStatus.retrieval_top_k ?? "N/A")],
+      ["Metric engine", systemStatus.metric_engine || "Unknown"],
+      ["Quality threshold", String(systemStatus.quality_gate_threshold ?? "N/A")],
+      ["Benchmark artifact", systemStatus.benchmark_artifact || "Unknown"],
+    ];
+    grid.innerHTML = settings.map(([label, value]) => `
+      <div class="panel-card"><span class="sm-label">${label}</span><strong style="display:block;margin-top:8px;word-break:break-word;">${escapeHtml(value)}</strong></div>
+    `).join("");
+    command.textContent = systemStatus.benchmark_command || "python domain_assistant.py && python evaluate_answers.py";
   }
 
   function renderFailureAnalysis() {
@@ -548,8 +654,13 @@ document.addEventListener("DOMContentLoaded", () => {
         item.classList.add("active");
         const targetTab = document.getElementById(`tab-${tabId}`);
         if (targetTab) targetTab.classList.add("active");
+        history.replaceState(null, "", `#${tabId}`);
       });
     });
+
+    const initialTab = window.location.hash.replace(/^#/, "");
+    const initialNav = initialTab && Array.from(tabNavItems).find(item => item.getAttribute("data-tab") === initialTab);
+    if (initialNav) initialNav.click();
   }
 
   // Difficulty filters
@@ -566,6 +677,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     tableSearchInput?.addEventListener("input", renderBenchmarkTable);
     globalSearchInput?.addEventListener("input", renderBenchmarkTable);
+    chartMetricSelect?.addEventListener("change", renderMainCharts);
+    selectAllCheckbox?.addEventListener("change", () => {
+      benchmarkTableBody?.querySelectorAll('input[type="checkbox"]').forEach(input => {
+        input.checked = selectAllCheckbox.checked;
+      });
+    });
+    btnAddQa?.addEventListener("click", async () => {
+      await fetchBenchmarkData();
+      addNotification("Dataset đã được làm mới", "Golden Dataset đang được đọc từ artifact hiện tại; giao diện không sửa trực tiếp file nguồn.", "info");
+    });
   }
 
   // Theme toggle

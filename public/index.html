@@ -403,13 +403,79 @@
             <h1 class="page-title">Kho Dữ Liệu Golden Dataset (20 QA)</h1>
             <p class="page-subtitle">Tập dữ liệu câu hỏi và đáp án mẫu được chọn lọc qua 10 tài liệu hỗ trợ của OrbitTech Store.</p>
           </div>
-          <button class="btn btn-primary" id="btn-add-qa">
-            <i class="fa-solid fa-plus"></i> Thêm Bộ Câu Hỏi Mới
+          <button class="btn btn-primary" id="btn-add-qa" title="Đọc lại golden_dataset.json và benchmark artifact">
+            <i class="fa-solid fa-rotate"></i> Làm Mới Dataset
           </button>
         </div>
 
         <div class="dataset-grid" id="dataset-cards-container">
           <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- TAB VIEW: RAGAS METRICS -->
+      <div class="tab-content" id="tab-metrics">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Chỉ Số RAGAS</h1>
+            <p class="page-subtitle">Tổng hợp 5 metrics của evaluation core và cách chúng được tính từ benchmark artifact.</p>
+          </div>
+        </div>
+        <div class="kpi-grid" id="ragas-metric-cards"></div>
+        <div class="panel-card mt-4">
+          <div class="panel-header">
+            <div>
+              <h3 class="panel-title">Định Nghĩa & Nguồn Tính Điểm</h3>
+              <p class="panel-subtitle">Các điểm này dùng heuristic deterministic trong template.py, không phải LLM-as-a-Judge.</p>
+            </div>
+          </div>
+          <div class="table-container mt-3">
+            <table class="data-table">
+              <thead><tr><th>Metric</th><th>Ý nghĩa</th><th>Công thức / nguồn</th><th>Giá trị hiện tại</th></tr></thead>
+              <tbody id="ragas-definition-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB VIEW: QUALITY GATE -->
+      <div class="tab-content" id="tab-gate">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Cổng Quality Gate</h1>
+            <p class="page-subtitle">Kiểm tra quyết định deploy dựa trên benchmark artifact hiện tại.</p>
+          </div>
+        </div>
+        <div class="kpi-grid" id="gate-status-cards"></div>
+        <div class="panel-card mt-4">
+          <div class="panel-header">
+            <div>
+              <h3 class="panel-title">Các điều kiện kiểm định</h3>
+              <p class="panel-subtitle">Ngưỡng hiện tại được đọc từ system status; không phải dữ liệu hardcode của giao diện.</p>
+            </div>
+          </div>
+          <div class="table-container mt-3">
+            <table class="data-table">
+              <thead><tr><th>Check</th><th>Giá trị</th><th>Ngưỡng</th><th>Trạng thái</th></tr></thead>
+              <tbody id="gate-check-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB VIEW: SETTINGS -->
+      <div class="tab-content" id="tab-settings">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Thiết Lập Cấu Hình</h1>
+            <p class="page-subtitle">Thông số runtime đang được backend sử dụng. Các giá trị nhạy cảm không được hiển thị.</p>
+          </div>
+        </div>
+        <div class="dataset-grid" id="settings-grid"></div>
+        <div class="panel-card mt-4">
+          <h3 class="panel-title">Quy trình benchmark chính thức</h3>
+          <p class="panel-subtitle">Chạy ở terminal để tạo actual answers và benchmark results reproducible:</p>
+          <pre class="code-block-text mt-3" id="settings-command"></pre>
         </div>
       </div>
 
