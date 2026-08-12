@@ -170,7 +170,7 @@ class OrbitEvalHandler(SimpleHTTPRequestHandler):
             try:
                 corpus_dir = WORKSPACE_DIR / "data" / "technology_store"
                 _, chunks = da_mod.load_corpus(corpus_dir)
-                retriever = da_mod.TFIDFRetriever(chunks)
+                retriever = da_mod.BM25Retriever(chunks)
                 retrieved_chunks = retriever.retrieve(question, top_k=3)
                 retrieved_texts = [c.text for c in retrieved_chunks]
                 context_combined = "\n\n".join(retrieved_texts)
@@ -184,16 +184,12 @@ class OrbitEvalHandler(SimpleHTTPRequestHandler):
                         actual_answer = generator.generate(prompt)
                         engine_used = f"OpenAI Live API ({os.getenv('OPENAI_MODEL', 'gpt-4o-mini')})"
                     except Exception as gen_err:
-                        print(f"OpenAI generator failed, falling back to heuristic: {gen_err}")
-                        generator = da_mod.HeuristicGenerator()
-                        prompt = da_mod._build_prompt(question, retrieved_chunks)
-                        actual_answer = generator.generate(prompt)
-                        engine_used = "Heuristic Fallback"
+                        print(f"OpenAI generator failed: {gen_err}")
+                        actual_answer = "I am unable to generate an answer right now. Please try again later."
+                        engine_used = "Unavailable"
                 else:
-                    generator = da_mod.HeuristicGenerator()
-                    prompt = da_mod._build_prompt(question, retrieved_chunks)
-                    actual_answer = generator.generate(prompt)
-                    engine_used = "Heuristic Engine"
+                    actual_answer = "I am unable to generate an answer because no live model is configured."
+                    engine_used = "Unavailable"
 
                 evaluator = solution_mod.RAGASEvaluator()
                 faithfulness = evaluator.evaluate_faithfulness(actual_answer, context_combined)
@@ -227,27 +223,13 @@ class OrbitEvalHandler(SimpleHTTPRequestHandler):
             except Exception as e:
                 print(f"Error in custom evaluation: {e}")
 
-        # Fallback response
-        fallback = {
-            "question": question,
-            "actual_answer": f"OrbitTech Support Response for: '{question}'. For standard domestic shipping, packages arrive within 3 to 5 business days after dispatch.",
-            "retrieved_contexts": ["Standard domestic shipping normally takes 3 to 5 business days after confirmed dispatch."],
-            "source_docs": ["04_shipping_and_delivery.md"],
-            "faithfulness": 0.92,
-            "relevance": 0.88,
-            "completeness": 0.85,
-            "context_recall": 0.90,
-            "context_precision": 0.95,
-            "overall": 0.8833,
-            "passed": True,
-            "failure_type": None,
-            "engine_used": "Fallback"
-        }
-
-        self.send_response(200)
+        self.send_response(503)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.end_headers()
-        self.wfile.write(json.dumps(fallback, ensure_ascii=False, indent=2).encode("utf-8"))
+        self.wfile.write(json.dumps({
+            "error": "assistant_unavailable",
+            "message": "The evaluation assistant is not available right now."
+        }, ensure_ascii=False).encode("utf-8"))
 
     def handle_re_eval(self):
         try:
@@ -262,7 +244,7 @@ class OrbitEvalHandler(SimpleHTTPRequestHandler):
                 qa_pairs = golden_data.get("qa_pairs", [])
 
                 _, chunks = da_mod.load_corpus(corpus_dir)
-                retriever = da_mod.TFIDFRetriever(chunks)
+                retriever = da_mod.BM25Retriever(chunks)
                 generator = da_mod.OpenAIGenerator()
 
                 evaluator = solution_mod.RAGASEvaluator()
