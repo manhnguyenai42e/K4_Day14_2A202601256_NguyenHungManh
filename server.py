@@ -96,7 +96,21 @@ class OrbitEvalHandler(SimpleHTTPRequestHandler):
         actual_answers_data = load_json_file(actual_answers_path) or []
         golden_data = load_json_file(golden_dataset_path) or {}
 
-        actual_map = {item.get("id"): item for item in actual_answers_data} if isinstance(actual_answers_data, list) else {}
+        # The official artifact is an object with an ``answers`` array.  Older
+        # UI re-evaluation runs wrote the array at the root, so accept both
+        # shapes while keeping the API response consistent.
+        if isinstance(actual_answers_data, dict):
+            actual_records = actual_answers_data.get("answers", [])
+        elif isinstance(actual_answers_data, list):
+            actual_records = actual_answers_data
+        else:
+            actual_records = []
+
+        actual_map = {
+            item.get("id"): item
+            for item in actual_records
+            if isinstance(item, dict) and item.get("id")
+        }
         golden_items = golden_data.get("qa_pairs", []) if isinstance(golden_data, dict) else []
         golden_map = {item.get("id"): item for item in golden_items}
 
@@ -110,8 +124,17 @@ class OrbitEvalHandler(SimpleHTTPRequestHandler):
             merged_item = dict(res)
             merged_item["expected_answer"] = golden_info.get("expected_answer", "")
             merged_item["contexts"] = golden_info.get("contexts", [])
-            merged_item["retrieved_contexts"] = actual_info.get("retrieved_contexts", [c.get("text", "") for c in golden_info.get("contexts", [])])
-            merged_item["source_doc"] = golden_info.get("contexts", [{}])[0].get("source_doc", "N/A") if golden_info.get("contexts") else "N/A"
+            merged_item["retrieved_contexts"] = actual_info.get(
+                "retrieved_contexts",
+                [],
+            )
+            retrieved_contexts = merged_item["retrieved_contexts"]
+            source_docs = sorted({
+                context.get("source_doc")
+                for context in retrieved_contexts
+                if isinstance(context, dict) and context.get("source_doc")
+            })
+            merged_item["source_doc"] = ", ".join(source_docs) or "N/A"
             merged_results.append(merged_item)
 
         response_payload = {

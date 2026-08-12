@@ -133,7 +133,7 @@
             <span>12 Tháng 8, 2026</span>
           </div>
 
-          <button class="btn btn-secondary" id="btn-re-eval">
+          <button class="btn btn-secondary" id="btn-re-eval" title="Chạy lại 20 câu bằng OpenAI Live; có thể phát sinh chi phí API">
             <i class="fa-solid fa-play"></i>
             <span>Chạy Đánh Giá Benchmark</span>
           </button>
@@ -365,6 +365,9 @@
                     <th>Nội Dung Câu Hỏi</th>
                     <th width="110">Trung Thực</th>
                     <th width="100">Liên Quan</th>
+                    <th width="100">Hoàn Thiện</th>
+                    <th width="90">Ctx Recall</th>
+                    <th width="90">Ctx Precision</th>
                     <th width="100">Điểm Tổng</th>
                     <th width="90">Kết Quả</th>
                   </tr>
@@ -381,9 +384,9 @@
             <div class="panel-header">
               <div class="flex-align">
                 <span class="live-indicator"></span>
-                <h3 class="panel-title">Nhật Ký Đánh Giá Thời Gian Thực</h3>
+                <h3 class="panel-title">Nhật Ký Các Case Benchmark</h3>
               </div>
-              <span class="badge-tag tag-neutral">Trực tiếp</span>
+              <span class="badge-tag tag-neutral">Từ artifact</span>
             </div>
 
             <div class="feed-list" id="feed-event-list">

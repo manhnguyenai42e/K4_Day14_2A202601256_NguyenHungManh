@@ -65,11 +65,16 @@ document.addEventListener("DOMContentLoaded", () => {
       btnReEval.disabled = true;
       btnReEval.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang đánh giá...`;
       try {
-        await fetch("/api/re-eval", { method: "POST" });
+        const res = await fetch("/api/re-eval", { method: "POST" });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          throw new Error(data.message || data.error || "Benchmark không chạy thành công");
+        }
         await fetchBenchmarkData();
-        addNotification("Chạy Benchmark Thành Công", "Đã đánh giá lại toàn bộ 20 test cases trên bộ dữ liệu Golden.", "pass");
+        addNotification("Chạy Benchmark Thành Công", data.message || "Đã đánh giá lại bộ dữ liệu Golden.", "pass");
       } catch (err) {
         console.error("Re-eval error:", err);
+        addNotification("Benchmark không thành công", err.message || "Không thể chạy benchmark.", "warning");
       } finally {
         btnReEval.disabled = false;
         btnReEval.innerHTML = `<i class="fa-solid fa-play"></i> Chạy Đánh Giá Benchmark`;
@@ -118,15 +123,20 @@ document.addEventListener("DOMContentLoaded", () => {
   // Render KPIs
   function renderKPIs() {
     const summary = benchmarkData.summary || {};
-    const total = summary.total || 20;
-    const passed = summary.passed || 14;
-    const passRate = summary.pass_rate ? (summary.pass_rate * 100).toFixed(0) : "70";
-    const faithfulness = summary.avg_faithfulness ? (summary.avg_faithfulness * 100).toFixed(1) : "76.5";
-    const recall = summary.avg_context_recall ? (summary.avg_context_recall * 100).toFixed(1) : "86.2";
+    const total = Number.isFinite(summary.total) ? summary.total : 0;
+    const passed = Number.isFinite(summary.passed) ? summary.passed : 0;
+    const passRateValue = Number.isFinite(summary.pass_rate) ? summary.pass_rate : 0;
+    const faithfulnessValue = Number.isFinite(summary.avg_faithfulness) ? summary.avg_faithfulness : 0;
+    const recallValue = Number.isFinite(summary.avg_context_recall) ? summary.avg_context_recall : 0;
+    const passRate = (passRateValue * 100).toFixed(0);
+    const faithfulness = (faithfulnessValue * 100).toFixed(1);
+    const recall = (recallValue * 100).toFixed(1);
 
     document.getElementById("kpi-total-cases").textContent = total;
     document.getElementById("kpi-faithfulness").textContent = `${faithfulness}%`;
     document.getElementById("kpi-recall").textContent = `${recall}%`;
+    const passTrend = document.querySelector("#kpi-total-cases")?.closest(".kpi-card")?.querySelector(".kpi-trend span");
+    if (passTrend) passTrend.textContent = `${passed}/${total} Đạt Chuẩn (${passRate}%)`;
 
     // Health Score calculation (0-100)
     const healthScore = Math.round((parseFloat(faithfulness) * 0.4) + (parseFloat(recall) * 0.3) + (parseFloat(passRate) * 0.3));
@@ -140,10 +150,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Update Topbar Gate Status
     const gatePill = document.getElementById("topbar-gate-pill");
     if (gatePill) {
-      const isPassed = (summary.pass_rate || 0.7) >= 0.60;
+      const isPassed = passRateValue >= 0.60;
       gatePill.className = `gate-status-pill ${isPassed ? "passed" : "failed"}`;
       gatePill.innerHTML = `<i class="fa-solid ${isPassed ? "fa-circle-check" : "fa-circle-xmark"}"></i>
-        <span>${isPassed ? "ĐẠT CHUẨN KIỂM ĐỊNH" : "BỊ KHÓA DEPLOY"} (${summary.pass_rate ? summary.pass_rate.toFixed(2) : "0.70"} ≥ 0.60)</span>`;
+        <span>${isPassed ? "ĐẠT CHUẨN KIỂM ĐỊNH" : "BỊ KHÓA DEPLOY"} (${passRateValue.toFixed(2)} ≥ 0.60)</span>`;
     }
 
     renderSparklines();
@@ -283,6 +293,9 @@ document.addEventListener("DOMContentLoaded", () => {
     benchmarkTableBody.innerHTML = filtered.map(r => {
       const fPct = Math.round((r.faithfulness || 0) * 100);
       const rPct = Math.round((r.relevance || 0) * 100);
+      const cPct = Math.round((r.completeness || 0) * 100);
+      const crPct = Math.round((r.context_recall || 0) * 100);
+      const cpPct = Math.round((r.context_precision || 0) * 100);
       const oPct = Math.round((r.overall || 0) * 100);
 
       const vnDiff = diffMap[r.difficulty] || r.difficulty;
@@ -299,13 +312,16 @@ document.addEventListener("DOMContentLoaded", () => {
               <span class="bar-val">${fPct}%</span>
             </div>
           </td>
-          <td>
-            <div class="metric-bar-cell">
-              <div class="bar-bg"><div class="bar-fill" style="width:${rPct}%; background:#3b82f6;"></div></div>
-              <span class="bar-val">${rPct}%</span>
-            </div>
-          </td>
-          <td><strong>${oPct}%</strong></td>
+           <td>
+             <div class="metric-bar-cell">
+               <div class="bar-bg"><div class="bar-fill" style="width:${rPct}%; background:#3b82f6;"></div></div>
+               <span class="bar-val">${rPct}%</span>
+             </div>
+           </td>
+           <td>${cPct}%</td>
+           <td>${crPct}%</td>
+           <td>${cpPct}%</td>
+           <td><strong>${oPct}%</strong></td>
           <td>
             <span class="badge-tag ${r.passed ? "tag-pass" : "tag-fail"}">
               ${r.passed ? "<i class='fa-solid fa-check'></i> ĐẠT" : "<i class='fa-solid fa-xmark'></i> LỖI"}
@@ -333,7 +349,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const results = benchmarkData.results || [];
 
     feedEventList.innerHTML = results.map((r, i) => {
-      const time = `14:31:${(10 + i).toString().padStart(2, "0")}`;
+      const time = `Case ${(i + 1).toString().padStart(2, "0")}`;
       const badgeClass = r.passed ? "tag-pass" : "tag-fail";
       const tagText = r.passed ? "ĐẠT" : (r.failure_type ? r.failure_type.toUpperCase() : "LỖI");
 
@@ -371,18 +387,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const logBody = document.getElementById("improvement-log-body");
     if (!boxes || !logBody) return;
 
-    const failureCounts = (benchmarkData.summary && benchmarkData.summary.failure_types) || { off_topic: 4, hallucination: 1, incomplete: 1 };
+    const failureCounts = (benchmarkData.summary && benchmarkData.summary.failure_types) || {};
+    const failures = (benchmarkData.results || []).filter(r => !r.passed);
+    const totalCases = (benchmarkData.summary && benchmarkData.summary.total) || (benchmarkData.results || []).length;
 
     boxes.innerHTML = `
       <div class="sandbox-results-grid">
         <div class="sandbox-metric-card"><span class="sm-label">Lỗi Lệch Chủ Đề (Off-Topic)</span><span class="sm-val" style="color:#ef4444">${failureCounts.off_topic || 0} case</span></div>
         <div class="sandbox-metric-card"><span class="sm-label">Lỗi Bốc Phét (Hallucination)</span><span class="sm-val" style="color:#f59e0b">${failureCounts.hallucination || 0} case</span></div>
         <div class="sandbox-metric-card"><span class="sm-label">Lỗi Trả Lời Thiếu (Incomplete)</span><span class="sm-val" style="color:#3b82f6">${failureCounts.incomplete || 0} case</span></div>
-        <div class="sandbox-metric-card"><span class="sm-label">Tổng Số Case Lỗi</span><span class="sm-val">6 / 20</span></div>
+        <div class="sandbox-metric-card"><span class="sm-label">Tổng Số Case Lỗi</span><span class="sm-val">${failures.length} / ${totalCases}</span></div>
       </div>
     `;
 
-    const failures = (benchmarkData.results || []).filter(r => !r.passed);
     const failureLogMap = {
       "off_topic": { cause: "Trả lời thiếu thông tin chính / Nhầm chủ đề", fix: "Bổ sung Guardrails kiểm tra Intent & tăng cửa sổ ngữ cảnh" },
       "hallucination": { cause: "Tự bịa thông tin ngoài tài liệu", fix: "Bổ sung Groundedness Check và bắt buộc dẫn nguồn evidence" },
@@ -421,7 +438,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const contexts = item.retrieved_contexts || item.contexts || [];
     const contextHtml = Array.isArray(contexts)
-      ? contexts.map(c => `<div class="modal-text-box mt-2" style="font-size:12px;">${escapeHtml(typeof c === "string" ? c : c.text)}</div>`).join("")
+      ? (contexts.length
+        ? contexts.map(c => `<div class="modal-text-box mt-2" style="font-size:12px;">${escapeHtml(typeof c === "string" ? c : (c?.text || ""))}</div>`).join("")
+        : "<p>Không có ngữ cảnh được truy xuất</p>")
       : "<p>Không có ngữ cảnh</p>";
 
     document.getElementById("modal-retrieved-contexts").innerHTML = contextHtml;
@@ -433,6 +452,8 @@ document.addEventListener("DOMContentLoaded", () => {
         <span class="badge-tag tag-pass">Độ trung thực: ${((item.faithfulness || 0) * 100).toFixed(0)}%</span>
         <span class="badge-tag tag-medium">Độ liên quan: ${((item.relevance || 0) * 100).toFixed(0)}%</span>
         <span class="badge-tag tag-easy">Độ hoàn thiện: ${((item.completeness || 0) * 100).toFixed(0)}%</span>
+        <span class="badge-tag tag-primary">Context Recall: ${((item.context_recall || 0) * 100).toFixed(0)}%</span>
+        <span class="badge-tag tag-primary">Context Precision: ${((item.context_precision || 0) * 100).toFixed(0)}%</span>
         <span class="badge-tag ${item.passed ? "tag-pass" : "tag-fail"}">Điểm tổng: ${((item.overall || 0) * 100).toFixed(0)}%</span>
       `;
     }
@@ -473,6 +494,9 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify({ question: q })
         });
         const data = await res.json();
+        if (!res.ok || data.error) {
+          throw new Error(data.message || data.error || "Không thể đánh giá câu hỏi");
+        }
 
         // Render sandbox output
         document.getElementById("sb-faithfulness").textContent = (data.faithfulness * 100).toFixed(0) + "%";
@@ -500,6 +524,7 @@ document.addEventListener("DOMContentLoaded", () => {
         addNotification("Đánh Giá Live Sandbox Hoàn Tất", `Câu hỏi: "${truncate(q, 35)}" -> Kết quả: ${(data.overall * 100).toFixed(0)}/100 (${data.passed ? "Đạt Chuẩn" : "Không Đạt"})`, data.passed ? "pass" : "warning");
       } catch (err) {
         console.error("Sandbox error:", err);
+        addNotification("Sandbox không khả dụng", err.message || "Không thể gọi API đánh giá live.", "warning");
       } finally {
         btnRunSandbox.disabled = false;
         btnRunSandbox.innerHTML = `<i class="fa-solid fa-bolt"></i> Chạy Đánh Giá Ngay`;
