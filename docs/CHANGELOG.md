@@ -17,6 +17,8 @@ Mọi thay đổi đáng kể, sửa lỗi, và tính năng mới được ghi t
   - Sao chép toàn bộ bộ favicon (`favicon.ico`, `favicon-32x32.png`, `favicon-16x16.png`, `apple-touch-icon.png`, `site.webmanifest`) từ SecondBrain và gắn vào `<head>` của `index.html` giúp hiển thị icon thương hiệu chuẩn trên tab trình duyệt.
 - **Cấu hình Vercel Cloud Deployment (`vercel.json`, `server.py`):**
   - Bổ sung file `vercel.json` và xuất `handler` chuẩn Serverless giúp ứng dụng deploy trực tiếp lên Vercel Cloud mượt mà.
+- **Tối ưu Sidebar cố định (`position: sticky; height: 100vh`):**
+  - Cố định chiều cao Sidebar theo 100vh màn hình và thu gọn khoảng cách menu, giúp widget **Project (OrbitTech Support)** và **User Profile (Nguyễn Hùng Mạnh)** luôn xuất hiện cố định ở đáy Sidebar trên mọi độ phân giải màn hình mà không bị trôi cuộn theo trang chính.
 - **Tối ưu layout & chống vỡ dòng chữ (No Wrap & Typography Fix):**
   - Bổ sung `white-space: nowrap` cho toàn bộ các nút bấm, thẻ badge trạng thái (`GATE`, `ENGINE`), nút ngày tháng và menu sidebar; mở rộng sidebar lên `260px` đảm bảo chữ hiển thị gọn gàng trên 1 dòng duy nhất.
 - **Tối ưu trải nghiệm cuộn trang (Custom Scrollbars & Sticky Headers):**
