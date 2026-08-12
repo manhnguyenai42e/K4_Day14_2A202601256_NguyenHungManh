@@ -69,6 +69,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function fetchBenchmarkData() {
     try {
+      const statusRes = await fetch("/api/system-status");
+      if (statusRes.ok) {
+        const sysData = await statusRes.json();
+        const engineText = document.getElementById("engine-status-text");
+        if (engineText) {
+          engineText.textContent = sysData.has_openai_key ? `OpenAI Live API (${sysData.openai_model})` : "Offline Heuristic Engine";
+        }
+      }
+    } catch (e) {}
+
+    try {
       const res = await fetch("/api/benchmark");
       if (!res.ok) throw new Error("Failed to load benchmark data");
       benchmarkData = await res.json();
