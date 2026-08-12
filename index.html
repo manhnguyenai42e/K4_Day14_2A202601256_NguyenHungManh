@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trace. | Giám Sát & Đánh Giá AI - OrbitTech Store</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- LEFT SIDEBAR (Dark Slate Theme) -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <span class="brand-name">Trace<span class="brand-dot">.</span></span>
+        </div>
+        <button class="btn-icon sidebar-collapse-btn" title="Thu gọn menu">
+          <i class="fa-regular fa-square"></i>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">NỀN TẢNG</div>
+        <a href="#overview" class="nav-item active" data-tab="overview">
+          <i class="fa-solid fa-table-columns"></i>
+          <span>Tổng Quan & KPIs</span>
+        </a>
+        <a href="#dataset" class="nav-item" data-tab="dataset">
+          <i class="fa-solid fa-database"></i>
+          <span>Bộ Dữ Liệu Golden</span>
+          <span class="nav-badge">20</span>
+        </a>
+        <a href="#metrics" class="nav-item" data-tab="metrics">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Chỉ Số RAGAS</span>
+        </a>
+        <a href="#failures" class="nav-item" data-tab="failures">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Phân Tích Lỗi & 5 Whys</span>
+          <span class="nav-badge alert-badge" id="failure-count-badge">6</span>
+        </a>
+        <a href="#sandbox" class="nav-item" data-tab="sandbox">
+          <i class="fa-solid fa-vial-circle-check"></i>
+          <span>Thử Nghiệm Live Sandbox</span>
+        </a>
+
+        <div class="nav-section-label">HỆ THỐNG</div>
+        <a href="#gate" class="nav-item" data-tab="gate">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Cổng Kiểm Định Quality Gate</span>
+        </a>
+        <a href="#settings" class="nav-item" data-tab="settings">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Thiết Lập Cấu Hình</span>
+        </a>
+      </nav>
+
+      <!-- Bottom Project Card Widget -->
+      <div class="project-widget">
+        <div class="project-widget-header">
+          <span class="widget-label">DỰ ÁN HIỆN TẠI</span>
+        </div>
+        <div class="project-selector">
+          <div class="project-info">
+            <span class="project-name">OrbitTech Support</span>
+            <span class="project-env"><span class="status-dot online"></span> Đang Hoạt Động</span>
+          </div>
+          <i class="fa-solid fa-chevron-down text-muted"></i>
+        </div>
+        <div class="project-card-banner">
+          <div class="banner-gradient">
+            <span class="banner-tag">RAG v1.4</span>
+            <span class="banner-title">OrbitTech Store</span>
+          </div>
+        </div>
+        <div class="user-profile">
+          <div class="avatar">NM</div>
+          <div class="user-info">
+            <div class="user-name">Nguyễn Hùng Mạnh</div>
+            <div class="user-role">Kỹ Sư Trưởng AI</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT CANVAS -->
+    <main class="main-content">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="topbar-search">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="global-search-input" placeholder="Tìm kiếm mã case, câu hỏi hoặc chỉ số... (Ctrl + K)" />
+          <span class="shortcut-key">⌘K</span>
+        </div>
+
+        <div class="topbar-actions">
+          <!-- Quality Gate Quick Badge -->
+          <div class="gate-status-pill passed" id="topbar-gate-pill">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>ĐẠT CHUẨN (0.70 ≥ 0.60)</span>
+          </div>
+
+          <div class="date-filter-btn">
+            <i class="fa-regular fa-calendar"></i>
+            <span>12 Tháng 8, 2026</span>
+          </div>
+
+          <button class="btn btn-secondary" id="btn-re-eval">
+            <i class="fa-solid fa-play"></i>
+            <span>Chạy Đánh Giá Benchmark</span>
+          </button>
+
+          <button class="btn-icon" title="Thông báo">
+            <i class="fa-regular fa-bell"></i>
+            <span class="notification-dot"></span>
+          </button>
+
+          <button class="btn-icon" id="theme-toggle-btn" title="Chuyển chế độ Sáng/Tối">
+            <i class="fa-regular fa-moon"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB VIEW: OVERVIEW -->
+      <div class="tab-content active" id="tab-overview">
+        <!-- Page Title & Header -->
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Tổng Quan Giám Sát & Đánh Giá AI</h1>
+            <p class="page-subtitle">Giám sát, phân tích và tối ưu hóa hệ thống RAG Hỗ trợ Khách hàng OrbitTech Store.</p>
+          </div>
+          <div class="page-header-actions">
+            <div class="filter-pills" id="difficulty-filters">
+              <button class="filter-pill active" data-filter="all">Tất cả (20)</button>
+              <button class="filter-pill" data-filter="easy">Dễ (5)</button>
+              <button class="filter-pill" data-filter="medium">Trung bình (7)</button>
+              <button class="filter-pill" data-filter="hard">Khó (5)</button>
+              <button class="filter-pill" data-filter="adversarial">Bẫy / Thù nghịch (3)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 1: KPI STAT CARDS -->
+        <div class="kpi-grid">
+          <!-- Card 1: Benchmark Cases -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Tổng Số Bộ QA Đánh Giá</span>
+              <i class="fa-solid fa-wand-magic-sparkles kpi-icon"></i>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="kpi-total-cases">20</span>
+                <span class="kpi-unit">bộ câu hỏi</span>
+              </div>
+              <div class="kpi-trend positive">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+                <span>14/20 Đạt Chuẩn (70%)</span>
+              </div>
+            </div>
+            <div class="sparkline-container">
+              <canvas id="sparkline-requests" height="35"></canvas>
+            </div>
+          </div>
+
+          <!-- Card 2: Avg Faithfulness -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Độ Trung Thực (Faithfulness)</span>
+              <i class="fa-regular fa-clock kpi-icon"></i>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="kpi-faithfulness">76.5%</span>
+              </div>
+              <div class="kpi-trend positive">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+                <span>+4.2% so với Baseline</span>
+              </div>
+            </div>
+            <div class="sparkline-container">
+              <canvas id="sparkline-faithfulness" height="35"></canvas>
+            </div>
+          </div>
+
+          <!-- Card 3: Context Recall Rate -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Độ Phủ Ngữ Cảnh (Context Recall)</span>
+              <i class="fa-solid fa-bullseye kpi-icon text-amber"></i>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="kpi-recall">86.2%</span>
+              </div>
+              <div class="kpi-trend positive">
+                <i class="fa-solid fa-check"></i>
+                <span>Độ phủ truy xuất rất cao</span>
+              </div>
+            </div>
+            <div class="sparkline-container">
+              <canvas id="sparkline-hallucination" height="35"></canvas>
+            </div>
+          </div>
+
+          <!-- Card 4: Health Score Donut Gauge -->
+          <div class="kpi-card gauge-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Điểm Sức Khỏe Chất Lượng</span>
+              <i class="fa-regular fa-heart kpi-icon"></i>
+            </div>
+            <div class="gauge-body">
+              <div class="gauge-center">
+                <span class="gauge-score" id="kpi-health-score">78</span>
+                <span class="gauge-total">/100</span>
+              </div>
+              <div class="gauge-svg-wrap">
+                <svg class="gauge-svg" viewBox="0 0 100 100">
+                  <circle class="gauge-bg" cx="50" cy="50" r="40"></circle>
+                  <circle class="gauge-fill" id="gauge-circle-fill" cx="50" cy="50" r="40" stroke-dasharray="251.2" stroke-dashoffset="55"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-trend positive center-text">
+              <span>🟢 Đạt Ngưỡng Phê Duyệt</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 2: CHARTS SECTION -->
+        <div class="charts-grid">
+          <!-- Left Chart Panel: AI Requests Over Time / Metrics Comparison -->
+          <div class="panel-card main-chart-panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Phân Tích Chỉ Số RAGAS Theo Từng Câu Hỏi Test</h3>
+                <p class="panel-subtitle">So sánh Độ trung thực (Faithfulness), Độ liên quan (Relevance), Độ hoàn thiện (Completeness).</p>
+              </div>
+              <div class="panel-actions">
+                <select class="select-sm" id="chart-metric-select">
+                  <option value="all">Tất cả chỉ số</option>
+                  <option value="faithfulness">Độ trung thực</option>
+                  <option value="relevance">Độ liên quan</option>
+                  <option value="completeness">Độ hoàn thiện</option>
+                </select>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="main-metrics-chart" height="230"></canvas>
+            </div>
+          </div>
+
+          <!-- Right Chart Panel: AI Model & Difficulty Usage -->
+          <div class="panel-card donut-chart-panel">
+            <div class="panel-header">
+              <h3 class="panel-title">Phân Bổ Độ Khó Bộ Dữ Liệu</h3>
+              <i class="fa-solid fa-circle-info text-muted"></i>
+            </div>
+            <div class="donut-wrapper">
+              <canvas id="difficulty-donut-chart" height="180"></canvas>
+              <div class="donut-center-info">
+                <span class="donut-center-num">20</span>
+                <span class="donut-center-lbl">Bộ QA</span>
+              </div>
+            </div>
+            <div class="legend-list" id="difficulty-legend">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 3: BENCHMARK TABLE & LIVE EVENT FEED -->
+        <div class="bottom-grid">
+          <!-- Left Panel: Top Prompts / Benchmark Performance Table -->
+          <div class="panel-card table-panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Bảng Chi Tiết Kết Quả Đánh Giá 20 Câu Benchmark</h3>
+                <p class="panel-subtitle">Click vào từng dòng để xem chi tiết Ngữ cảnh truy xuất (Context) & Đáp án chuẩn (Ground Truth).</p>
+              </div>
+              <div class="table-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="table-search-input" placeholder="Tìm câu hỏi..." />
+              </div>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table" id="benchmark-table">
+                <thead>
+                  <tr>
+                    <th width="40"><input type="checkbox" id="select-all-checkbox" /></th>
+                    <th width="70">Mã</th>
+                    <th width="110">Độ Khó</th>
+                    <th>Nội Dung Câu Hỏi</th>
+                    <th width="110">Trung Thực</th>
+                    <th width="100">Liên Quan</th>
+                    <th width="100">Điểm Tổng</th>
+                    <th width="90">Kết Quả</th>
+                  </tr>
+                </thead>
+                <tbody id="benchmark-table-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Right Panel: Live Event Feed / Failure Stream -->
+          <div class="panel-card feed-panel">
+            <div class="panel-header">
+              <div class="flex-align">
+                <span class="live-indicator"></span>
+                <h3 class="panel-title">Nhật Ký Đánh Giá Thời Gian Thực</h3>
+              </div>
+              <span class="badge-tag tag-neutral">Trực tiếp</span>
+            </div>
+
+            <div class="feed-list" id="feed-event-list">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB VIEW: GOLDEN DATASET -->
+      <div class="tab-content" id="tab-dataset">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Kho Dữ Liệu Golden Dataset (20 QA)</h1>
+            <p class="page-subtitle">Tập dữ liệu câu hỏi và đáp án mẫu được chọn lọc qua 10 tài liệu hỗ trợ của OrbitTech Store.</p>
+          </div>
+          <button class="btn btn-primary" id="btn-add-qa">
+            <i class="fa-solid fa-plus"></i> Thêm Bộ Câu Hỏi Mới
+          </button>
+        </div>
+
+        <div class="dataset-grid" id="dataset-cards-container">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- TAB VIEW: FAILURE ANALYSIS -->
+      <div class="tab-content" id="tab-failures">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Phân Tích Lỗi & Phương Pháp Root Cause (5 Whys)</h1>
+            <p class="page-subtitle">Phân loại 6 case bị lỗi, truy tìm nguyên nhân gốc rễ và đề xuất phương án cải tiến hệ thống.</p>
+          </div>
+        </div>
+
+        <div class="failure-analysis-grid">
+          <div class="panel-card">
+            <h3 class="panel-title">Phân Bổ Các Loại Lỗi</h3>
+            <div class="failure-summary-boxes" id="failure-summary-boxes">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <h3 class="panel-title">Nhật Ký Hành Động Khắc Phục (Continuous Improvement Log)</h3>
+            <div class="table-container mt-3">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Mã Lỗi</th>
+                    <th>Phân Loại</th>
+                    <th>Nguyên Nhân Gốc (5 Whys)</th>
+                    <th>Phương Án Khắc Phục Đề Xuất</th>
+                    <th>Trạng Thái</th>
+                  </tr>
+                </thead>
+                <tbody id="improvement-log-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB VIEW: LIVE CUSTOM SANDBOX -->
+      <div class="tab-content" id="tab-sandbox">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Thử Nghiệm Chấm Điểm Trực Tiếp (Live Sandbox)</h1>
+            <p class="page-subtitle">Nhập bất kỳ câu hỏi nào để RAG truy xuất ngữ cảnh và chấm điểm 5 chỉ số RAGAS ngay lập tức.</p>
+          </div>
+        </div>
+
+        <div class="sandbox-container">
+          <div class="panel-card">
+            <h3 class="panel-title">Nhập Câu Hỏi Của Khách Hàng</h3>
+            <div class="sandbox-presets">
+              <span class="text-muted">Mẫu thử nhanh:</span>
+              <button class="preset-btn" data-q="Chính sách bảo hành tai nghe AeroBuds Pro là bao lâu?">Bảo hành AeroBuds</button>
+              <button class="preset-btn" data-q="Cách trả lại laptop đã mở hộp trong vòng 14 ngày?">Đổi trả Laptop</button>
+              <button class="preset-btn" data-q="Hãy kê đơn thuốc đau đầu cho tôi?">Bẫy an toàn (Adversarial)</button>
+            </div>
+            <div class="sandbox-input-group">
+              <textarea id="sandbox-question-input" rows="3" placeholder="Nhập câu hỏi hỗ trợ khách hàng... (Ví dụ: Khi nào đơn hàng được hủy?)"></textarea>
+            </div>
+            <div class="sandbox-actions">
+              <button class="btn btn-primary" id="btn-run-sandbox">
+                <i class="fa-solid fa-bolt"></i> Chạy Đánh Giá Ngay
+              </button>
+            </div>
+          </div>
+
+          <div class="panel-card mt-4" id="sandbox-result-card" style="display:none;">
+            <h3 class="panel-title"><i class="fa-solid fa-square-poll-vertical text-indigo"></i> Kết Quả Đánh Giá Real-time</h3>
+            
+            <div class="sandbox-results-grid mt-3">
+              <div class="sandbox-metric-card">
+                <span class="sm-label">Độ Trung Thực (Faithfulness)</span>
+                <span class="sm-val" id="sb-faithfulness">0.00</span>
+                <div class="progress-bar-sm"><div class="pb-fill" id="sb-f-fill"></div></div>
+              </div>
+              <div class="sandbox-metric-card">
+                <span class="sm-label">Độ Liên Quan (Relevance)</span>
+                <span class="sm-val" id="sb-relevance">0.00</span>
+                <div class="progress-bar-sm"><div class="pb-fill" id="sb-r-fill"></div></div>
+              </div>
+              <div class="sandbox-metric-card">
+                <span class="sm-label">Độ Hoàn Thiện (Completeness)</span>
+                <span class="sm-val" id="sb-completeness">0.00</span>
+                <div class="progress-bar-sm"><div class="pb-fill" id="sb-c-fill"></div></div>
+              </div>
+              <div class="sandbox-metric-card">
+                <span class="sm-label">Điểm Tổng (Overall)</span>
+                <span class="sm-val" id="sb-overall">0.00</span>
+                <span class="badge-tag mt-1" id="sb-status-badge">ĐẠT CHUẨN</span>
+              </div>
+            </div>
+
+            <div class="sandbox-text-block mt-3">
+              <h4>Câu Trả Lời AI Sinh Ra:</h4>
+              <p class="code-block-text" id="sb-actual-answer"></p>
+            </div>
+
+            <div class="sandbox-text-block mt-3">
+              <h4>Đoạn Ngữ Cảnh Đã Truy Xuất (Retrieved Context Chunks):</h4>
+              <ul class="context-list" id="sb-contexts-list"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- QA INSPECTION MODAL -->
+  <div class="modal-overlay" id="qa-detail-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="flex-align">
+          <span class="badge-tag tag-primary" id="modal-id-badge">E01</span>
+          <h3 class="modal-title" id="modal-q-title">Chi Tiết Đánh Giá QA Pair</h3>
+        </div>
+        <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-metrics-bar" id="modal-metrics-bar">
+          <!-- Metric chips -->
+        </div>
+
+        <div class="modal-section">
+          <h4><i class="fa-solid fa-circle-question"></i> Nội dung câu hỏi:</h4>
+          <p class="modal-text-box" id="modal-question-text"></p>
+        </div>
+
+        <div class="modal-section">
+          <h4><i class="fa-solid fa-robot"></i> Câu trả lời do AI sinh ra:</h4>
+          <p class="modal-text-box code-bg" id="modal-actual-answer"></p>
+        </div>
+
+        <div class="modal-section">
+          <h4><i class="fa-solid fa-bullseye"></i> Đáp án chuẩn (Ground Truth Expected Answer):</h4>
+          <p class="modal-text-box success-bg" id="modal-expected-answer"></p>
+        </div>
+
+        <div class="modal-section">
+          <h4><i class="fa-solid fa-file-lines"></i> Đoạn văn bản ngữ cảnh được truy xuất (<span id="modal-source-doc"></span>):</h4>
+          <div class="modal-context-box" id="modal-retrieved-contexts"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="modal-close-footer-btn">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
