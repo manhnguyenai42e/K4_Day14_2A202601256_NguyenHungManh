@@ -9,3 +9,17 @@ __pycache__/
 
 .vercel
 .env*
+!.env.example
+
+# Local logs, coverage and generated runtime files
+*.log
+.coverage
+htmlcov/
+artifacts/*-runtime.json
+artifacts/*.tmp
+
+# Local tooling state
+.mypy_cache/
+.hypothesis/
+.idea/
+.vscode/
