@@ -138,10 +138,53 @@
             <span>Chạy Đánh Giá Benchmark</span>
           </button>
 
-          <button class="btn-icon" title="Thông báo">
-            <i class="fa-regular fa-bell"></i>
-            <span class="notification-dot"></span>
-          </button>
+          <div class="notification-dropdown-wrapper" style="position: relative;">
+            <button class="btn-icon" id="btn-notifications" title="Thông báo hệ thống">
+              <i class="fa-regular fa-bell"></i>
+              <span class="notification-dot" id="noti-dot"></span>
+            </button>
+
+            <!-- Notification Center Menu Dropdown -->
+            <div class="notification-menu" id="notification-menu">
+              <div class="noti-header">
+                <div class="noti-title">
+                  <i class="fa-solid fa-bell text-indigo"></i>
+                  <span>Thông Báo Hệ Thống</span>
+                  <span class="noti-count-badge" id="noti-unread-count">3</span>
+                </div>
+                <button class="btn-text-sm" id="btn-mark-read">Đánh dấu đã đọc</button>
+              </div>
+              <div class="noti-list" id="noti-list">
+                <div class="noti-item unread">
+                  <div class="noti-icon pass"><i class="fa-solid fa-shield-cat"></i></div>
+                  <div class="noti-content">
+                    <div class="noti-item-title">Quality Gate Đạt Chuẩn</div>
+                    <div class="noti-item-desc">Chỉ số chất lượng hệ thống RAG v1.4 đạt 78/100 (vượt ngưỡng 60/100).</div>
+                    <div class="noti-item-time">Vừa xong</div>
+                  </div>
+                </div>
+                <div class="noti-item unread">
+                  <div class="noti-icon warning"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                  <div class="noti-content">
+                    <div class="noti-item-title">Cảnh Báo Câu Hỏi Bẫy (Case H01)</div>
+                    <div class="noti-item-desc">Điểm hoàn thiện (Completeness) đạt 0.20. Đã tự động kích hoạt 5 Whys.</div>
+                    <div class="noti-item-time">10 phút trước</div>
+                  </div>
+                </div>
+                <div class="noti-item unread">
+                  <div class="noti-icon info"><i class="fa-solid fa-database"></i></div>
+                  <div class="noti-content">
+                    <div class="noti-item-title">Đã Đồng Bộ Golden Dataset</div>
+                    <div class="noti-item-desc">Nguồn dữ liệu 20 test cases đã đồng bộ với OrbitTech Customer Support DB.</div>
+                    <div class="noti-item-time">1 giờ trước</div>
+                  </div>
+                </div>
+              </div>
+              <div class="noti-footer">
+                <span>Được giám sát tự động bởi Trace. Evaluation Engine</span>
+              </div>
+            </div>
+          </div>
 
           <button class="btn-icon" id="theme-toggle-btn" title="Chuyển chế độ Sáng/Tối">
             <i class="fa-regular fa-moon"></i>
@@ -234,7 +277,7 @@
           <!-- Card 4: Health Score Donut Gauge -->
           <div class="kpi-card gauge-card">
             <div class="kpi-header">
-              <span class="kpi-label">Điểm Sức Khỏe Chất Lượng</span>
+              <span class="kpi-label">Chỉ Số Chất Lượng AI</span>
               <i class="fa-regular fa-heart kpi-icon"></i>
             </div>
             <div class="gauge-body">

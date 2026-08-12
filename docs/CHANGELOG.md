@@ -17,6 +17,13 @@ Mọi thay đổi đáng kể, sửa lỗi, và tính năng mới được ghi t
   - Sao chép toàn bộ bộ favicon (`favicon.ico`, `favicon-32x32.png`, `favicon-16x16.png`, `apple-touch-icon.png`, `site.webmanifest`) từ SecondBrain và gắn vào `<head>` của `index.html` giúp hiển thị icon thương hiệu chuẩn trên tab trình duyệt.
 - **Cấu hình Vercel Cloud Deployment (`vercel.json`, `server.py`):**
   - Bổ sung file `vercel.json` và xuất `handler` chuẩn Serverless giúp ứng dụng deploy trực tiếp lên Vercel Cloud mượt mà.
+- **Tính năng Trung Tâm Thông Báo Real-time (Notification Center Dropdown):**
+  - Kích hoạt nút quả chuông thông báo trên Topbar thành menu thả (dropdown center) tương tác thực tế với hiệu ứng mượt mà.
+  - Hiển thị danh sách thông báo hệ thống (Quality Gate Pass/Fail, cảnh báo 5 Whys câu bẫy, đồng bộ dữ liệu Golden Dataset).
+  - Tự động phát sinh thông báo mới sống động và cập nhật chấm đỏ (unread badge) mỗi khi người dùng bấm **Chạy Đánh Giá Benchmark** hoặc kiểm thử **Live Custom Sandbox**.
+  - Hỗ trợ nút **"Đánh dấu đã đọc"** giúp xóa chấm đỏ và cập nhật số lượng thông báo tức thì.
+- **Chuẩn hóa nhãn KPI tiếng Việt (Việt hóa linh hoạt):**
+  - Đổi nhãn `Điểm Sức Khỏe Chất Lượng` thành **`Chỉ Số Chất Lượng AI`** giúp tên chỉ số trở nên tự nhiên, dễ hiểu và chuyên nghiệp.
 - **Tối ưu Sidebar cố định (`position: sticky; height: 100vh`):**
   - Cố định chiều cao Sidebar theo 100vh màn hình và thu gọn khoảng cách menu, giúp widget **Project (OrbitTech Support)** và **User Profile (Nguyễn Hùng Mạnh)** luôn xuất hiện cố định ở đáy Sidebar trên mọi độ phân giải màn hình mà không bị trôi cuộn theo trang chính.
 - **Tối ưu layout & chống vỡ dòng chữ (No Wrap & Typography Fix):**

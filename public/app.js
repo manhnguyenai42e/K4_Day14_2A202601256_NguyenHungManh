@@ -32,6 +32,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const sandboxResultCard = document.getElementById("sandbox-result-card");
   const presetBtns = document.querySelectorAll(".preset-btn");
 
+  // Notification Center DOM
+  const btnNotifications = document.getElementById("btn-notifications");
+  const notificationMenu = document.getElementById("notification-menu");
+  const btnMarkRead = document.getElementById("btn-mark-read");
+  const notiDot = document.getElementById("noti-dot");
+  const notiUnreadCount = document.getElementById("noti-unread-count");
+  const notiList = document.getElementById("noti-list");
+
   // Difficulty Mapping in Vietnamese
   const diffMap = {
     easy: "Dễ",
@@ -49,6 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupModalEvents();
     setupSandboxEvents();
     setupThemeToggle();
+    setupNotificationEvents();
 
     await fetchBenchmarkData();
 
@@ -58,6 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         await fetch("/api/re-eval", { method: "POST" });
         await fetchBenchmarkData();
+        addNotification("Chạy Benchmark Thành Công", "Đã đánh giá lại toàn bộ 20 test cases trên bộ dữ liệu Golden.", "pass");
       } catch (err) {
         console.error("Re-eval error:", err);
       } finally {
@@ -487,6 +497,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (sandboxResultCard) sandboxResultCard.style.display = "block";
+        addNotification("Đánh Giá Live Sandbox Hoàn Tất", `Câu hỏi: "${truncate(q, 35)}" -> Kết quả: ${(data.overall * 100).toFixed(0)}/100 (${data.passed ? "Đạt Chuẩn" : "Không Đạt"})`, data.passed ? "pass" : "warning");
       } catch (err) {
         console.error("Sandbox error:", err);
       } finally {
@@ -536,6 +547,61 @@ document.addEventListener("DOMContentLoaded", () => {
       const isDark = document.body.classList.contains("dark-mode");
       themeToggleBtn.innerHTML = isDark ? `<i class="fa-regular fa-sun"></i>` : `<i class="fa-regular fa-moon"></i>`;
     });
+  }
+
+  // Notification Center Setup
+  function setupNotificationEvents() {
+    if (!btnNotifications || !notificationMenu) return;
+
+    btnNotifications.addEventListener("click", (e) => {
+      e.stopPropagation();
+      notificationMenu.classList.toggle("active");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (notificationMenu.classList.contains("active") && !notificationMenu.contains(e.target)) {
+        notificationMenu.classList.remove("active");
+      }
+    });
+
+    btnMarkRead?.addEventListener("click", () => {
+      const unreadItems = notiList.querySelectorAll(".noti-item.unread");
+      unreadItems.forEach(item => item.classList.remove("unread"));
+      if (notiDot) notiDot.style.display = "none";
+      if (notiUnreadCount) {
+        notiUnreadCount.textContent = "0";
+        notiUnreadCount.style.background = "var(--emerald-bg)";
+        notiUnreadCount.style.color = "var(--emerald)";
+      }
+    });
+  }
+
+  function addNotification(title, desc, type = 'info') {
+    if (!notiList) return;
+    const iconMap = {
+      pass: '<i class="fa-solid fa-shield-cat"></i>',
+      warning: '<i class="fa-solid fa-triangle-exclamation"></i>',
+      info: '<i class="fa-solid fa-bolt"></i>'
+    };
+    const item = document.createElement("div");
+    item.className = "noti-item unread";
+    item.innerHTML = `
+      <div class="noti-icon ${type}">${iconMap[type] || iconMap.info}</div>
+      <div class="noti-content">
+        <div class="noti-item-title">${escapeHtml(title)}</div>
+        <div class="noti-item-desc">${escapeHtml(desc)}</div>
+        <div class="noti-item-time">Vừa xong</div>
+      </div>
+    `;
+    notiList.prepend(item);
+
+    if (notiDot) notiDot.style.display = "block";
+    if (notiUnreadCount) {
+      const current = parseInt(notiUnreadCount.textContent || "0", 10);
+      notiUnreadCount.textContent = (current + 1).toString();
+      notiUnreadCount.style.background = "var(--rose-bg)";
+      notiUnreadCount.style.color = "var(--rose)";
+    }
   }
 
   // Utility Helpers
