@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0",
+  "experiment": "Exercise 3.5 reference-guided lexical reranking",
+  "reranker": "solution.rerank_by_overlap",
+  "analysis_query": "golden expected_answer (offline only; not production-safe)",
+  "case_ids": [
+    "E01",
+    "M01",
+    "M03",
+    "H01",
+    "A03"
+  ],
+  "results": [
+    {
+      "id": "E01",
+      "retrieved_chunk_count": 5,
+      "recall_before": 0.9,
+      "recall_after": 0.9,
+      "precision_before": 0.95,
+      "precision_after": 1.0,
+      "precision_delta": 0.05
+    },
+    {
+      "id": "M01",
+      "retrieved_chunk_count": 5,
+      "recall_before": 1.0,
+      "recall_after": 1.0,
+      "precision_before": 0.887,
+      "precision_after": 1.0,
+      "precision_delta": 0.113
+    },
+    {
+      "id": "M03",
+      "retrieved_chunk_count": 5,
+      "recall_before": 0.897,
+      "recall_after": 0.897,
+      "precision_before": 1.0,
+      "precision_after": 1.0,
+      "precision_delta": 0.0
+    },
+    {
+      "id": "H01",
+      "retrieved_chunk_count": 5,
+      "recall_before": 0.889,
+      "recall_after": 0.889,
+      "precision_before": 1.0,
+      "precision_after": 1.0,
+      "precision_delta": 0.0
+    },
+    {
+      "id": "A03",
+      "retrieved_chunk_count": 5,
+      "recall_before": 0.76,
+      "recall_after": 0.76,
+      "precision_before": 0.867,
+      "precision_after": 1.0,
+      "precision_delta": 0.133
+    }
+  ],
+  "averages": {
+    "recall_before": 0.889,
+    "recall_after": 0.889,
+    "precision_before": 0.941,
+    "precision_after": 1.0,
+    "precision_delta": 0.059
+  }
+}

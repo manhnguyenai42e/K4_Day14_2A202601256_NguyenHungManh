@@ -124,6 +124,12 @@ Edge cases: policy version with missing order date (ask rather than guess); insu
 | A03 | 0.760 | 0.760 | 0.867 | 1.000 | +0.133 |
 | **Avg** | **0.889** | **0.889** | **0.941** | **1.000** | **+0.059** |
 
+Reproduced by `rerank_analysis.py` and saved in
+`artifacts/reranking_results.json`. The experiment passes each golden
+`expected_answer` as the offline analysis query to the lexical reranker. This
+is intentionally reference-guided for the bonus measurement only; production
+retrieval must not use `expected_answer` because that would be data leakage.
+
 Recall is unchanged because reranking preserves the retrieved set. Reranking is insufficient when evidence never enters top-k, query synonyms are missing, chunks split claims, or the corpus lacks evidence; then change query expansion, retriever, chunking, or corpus coverage.
 
 ## Completion status
