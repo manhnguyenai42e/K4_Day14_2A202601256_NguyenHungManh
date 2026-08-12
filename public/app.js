@@ -499,14 +499,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Render sandbox output
-        document.getElementById("sb-faithfulness").textContent = (data.faithfulness * 100).toFixed(0) + "%";
-        document.getElementById("sb-relevance").textContent = (data.relevance * 100).toFixed(0) + "%";
-        document.getElementById("sb-completeness").textContent = (data.completeness * 100).toFixed(0) + "%";
-        document.getElementById("sb-overall").textContent = (data.overall * 100).toFixed(0) + "%";
+        const formatMetric = value => Number.isFinite(value) ? (value * 100).toFixed(0) + "%" : "N/A";
+        document.getElementById("sb-faithfulness").textContent = formatMetric(data.faithfulness);
+        document.getElementById("sb-relevance").textContent = formatMetric(data.relevance);
+        document.getElementById("sb-completeness").textContent = formatMetric(data.completeness);
+        document.getElementById("sb-context-recall").textContent = formatMetric(data.context_recall);
+        document.getElementById("sb-context-precision").textContent = formatMetric(data.context_precision);
+        document.getElementById("sb-overall").textContent = formatMetric(data.overall);
 
-        document.getElementById("sb-f-fill").style.width = (data.faithfulness * 100) + "%";
-        document.getElementById("sb-r-fill").style.width = (data.relevance * 100) + "%";
-        document.getElementById("sb-c-fill").style.width = (data.completeness * 100) + "%";
+        document.getElementById("sb-f-fill").style.width = Number.isFinite(data.faithfulness) ? (data.faithfulness * 100) + "%" : "0%";
+        document.getElementById("sb-r-fill").style.width = Number.isFinite(data.relevance) ? (data.relevance * 100) + "%" : "0%";
+        document.getElementById("sb-c-fill").style.width = Number.isFinite(data.completeness) ? (data.completeness * 100) + "%" : "0%";
 
         const badge = document.getElementById("sb-status-badge");
         if (badge) {
@@ -521,7 +524,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (sandboxResultCard) sandboxResultCard.style.display = "block";
-        addNotification("Đánh Giá Live Sandbox Hoàn Tất", `Câu hỏi: "${truncate(q, 35)}" -> Kết quả: ${(data.overall * 100).toFixed(0)}/100 (${data.passed ? "Đạt Chuẩn" : "Không Đạt"})`, data.passed ? "pass" : "warning");
+        addNotification("Đánh Giá Live Sandbox Hoàn Tất", `Câu hỏi: "${truncate(q, 35)}" -> Kết quả: ${formatMetric(data.overall)} (${data.passed ? "Đạt Chuẩn" : "Không Đạt"})`, data.passed ? "pass" : "warning");
       } catch (err) {
         console.error("Sandbox error:", err);
         addNotification("Sandbox không khả dụng", err.message || "Không thể gọi API đánh giá live.", "warning");

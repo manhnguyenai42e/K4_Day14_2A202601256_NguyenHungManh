@@ -217,9 +217,14 @@ class OrbitEvalHandler(SimpleHTTPRequestHandler):
                 evaluator = solution_mod.RAGASEvaluator()
                 faithfulness = evaluator.evaluate_faithfulness(actual_answer, context_combined)
                 relevance = evaluator.evaluate_relevance(actual_answer, question)
-                completeness = 0.85
+                # A free-form question has no reference answer, so answer
+                # completeness and retrieval recall/precision are undefined.
+                # Do not present fabricated scores as benchmark measurements.
+                completeness = None
+                context_recall = None
+                context_precision = None
 
-                overall = (faithfulness + relevance + completeness) / 3.0
+                overall = (faithfulness + relevance) / 2.0
                 passed = overall >= 0.60
 
                 res_payload = {
@@ -230,12 +235,13 @@ class OrbitEvalHandler(SimpleHTTPRequestHandler):
                     "faithfulness": round(faithfulness, 4),
                     "relevance": round(relevance, 4),
                     "completeness": round(completeness, 4),
-                    "context_recall": 0.90,
-                    "context_precision": 0.95,
+                    "context_recall": context_recall,
+                    "context_precision": context_precision,
                     "overall": round(overall, 4),
                     "passed": passed,
                     "failure_type": None if passed else "incomplete",
-                    "engine_used": engine_used
+                    "engine_used": engine_used,
+                    "metrics_note": "Completeness, context recall and context precision require a reference answer and are not available in free-form sandbox mode."
                 }
 
                 self.send_response(200)

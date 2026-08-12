@@ -457,7 +457,7 @@
         <div class="page-header">
           <div>
             <h1 class="page-title">Thử Nghiệm Chấm Điểm Trực Tiếp (Live Sandbox)</h1>
-            <p class="page-subtitle">Nhập bất kỳ câu hỏi nào để RAG truy xuất ngữ cảnh và chấm điểm 5 chỉ số RAGAS ngay lập tức.</p>
+            <p class="page-subtitle">Nhập câu hỏi để RAG truy xuất ngữ cảnh và chấm điểm live. Các chỉ số cần đáp án chuẩn sẽ hiển thị N/A trong sandbox tự do.</p>
           </div>
         </div>
 
@@ -498,6 +498,14 @@
                 <span class="sm-label">Độ Hoàn Thiện (Completeness)</span>
                 <span class="sm-val" id="sb-completeness">0.00</span>
                 <div class="progress-bar-sm"><div class="pb-fill" id="sb-c-fill"></div></div>
+              </div>
+              <div class="sandbox-metric-card">
+                <span class="sm-label">Độ Phủ Ngữ Cảnh (Context Recall)</span>
+                <span class="sm-val" id="sb-context-recall">N/A</span>
+              </div>
+              <div class="sandbox-metric-card">
+                <span class="sm-label">Độ Chính Xác Ngữ Cảnh (Context Precision)</span>
+                <span class="sm-val" id="sb-context-precision">N/A</span>
               </div>
               <div class="sandbox-metric-card">
                 <span class="sm-label">Điểm Tổng (Overall)</span>
