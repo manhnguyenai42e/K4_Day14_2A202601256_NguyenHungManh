@@ -13,8 +13,12 @@ Mọi thay đổi đáng kể, sửa lỗi, và tính năng mới được ghi t
   - Kết nối backend server Python API (`/api/benchmark`, `/api/evaluate-custom`, `/api/re-eval`, `/api/system-status`) phục vụ chấm điểm và chạy đánh giá thời gian thực.
 - **Việt hóa toàn bộ giao diện (Vietnamese UI Localization):**
   - Chuyển toàn bộ nhãn menu, thẻ KPI (*Độ trung thực, Độ phủ ngữ cảnh, Điểm sức khỏe chất lượng*), bộ lọc độ khó (*Dễ, Trung bình, Khó, Bẫy*), và bảng 20 câu hỏi sang tiếng Việt dễ hiểu cho người dùng.
+- **Tích hợp bộ Favicon chuẩn từ SecondBrain (`Reference/Assets/favicon`):**
+  - Sao chép toàn bộ bộ favicon (`favicon.ico`, `favicon-32x32.png`, `favicon-16x16.png`, `apple-touch-icon.png`, `site.webmanifest`) từ SecondBrain và gắn vào `<head>` của `index.html` giúp hiển thị icon thương hiệu chuẩn trên tab trình duyệt.
 - **Cấu hình Vercel Cloud Deployment (`vercel.json`, `server.py`):**
   - Bổ sung file `vercel.json` và xuất `handler` chuẩn Serverless giúp ứng dụng deploy trực tiếp lên Vercel Cloud mượt mà.
+- **Tối ưu layout & chống vỡ dòng chữ (No Wrap & Typography Fix):**
+  - Bổ sung `white-space: nowrap` cho toàn bộ các nút bấm, thẻ badge trạng thái (`GATE`, `ENGINE`), nút ngày tháng và menu sidebar; mở rộng sidebar lên `260px` đảm bảo chữ hiển thị gọn gàng trên 1 dòng duy nhất.
 - **Tối ưu trải nghiệm cuộn trang (Custom Scrollbars & Sticky Headers):**
   - Giới hạn độ cao tối đa (`max-height: 460px`) cho bảng câu hỏi và kho dữ liệu Golden Dataset kèm thanh cuộn mượt (custom scrollbar), ghim cố định tiêu đề bảng (sticky header) giúp giao diện gọn gàng, không bị tràn cuộn dài.
 

@@ -54,6 +54,9 @@ def load_json_file(file_path: Path) -> dict | list | None:
 
 
 class OrbitEvalHandler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=str(WORKSPACE_DIR / "public"), **kwargs)
+
     def end_headers(self):
         # Enable CORS
         self.send_header("Access-Control-Allow-Origin", "*")
