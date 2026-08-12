@@ -351,8 +351,11 @@ class OrbitEvalHandler(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
 
 
-# Entry handler for Vercel Serverless Functions
-handler = OrbitEvalHandler
+# Entry handler for Vercel Serverless Functions. Keep this as an explicit
+# top-level class because the Vercel Python builder discovers class-based
+# handlers statically.
+class handler(OrbitEvalHandler):
+    pass
 
 
 def run_server(port=8000):
